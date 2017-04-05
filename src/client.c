@@ -63,11 +63,12 @@ int main(int argc, char ** argv){
 		assert(false);
 	}
 	int game_instance = start_new_game();
-	memset(buffer,0,sizeof buffer);
-	strcpy(buffer,argv[1]);
-	strcat(buffer," ");
-	strcat(buffer,argv[2]);
-	send_message(game_instance,buffer);
+	char tmp[MAX_MSG_SZ];
+	memset(tmp,0,sizeof tmp);
+	strcpy(tmp,argv[1]);
+	strcat(tmp," ");
+	strcat(tmp,argv[2]);
+	send_message(game_instance,tmp);
 	//recv_message(game_instance);
 	printf("%s\n",buffer);
 	sleep(1);
