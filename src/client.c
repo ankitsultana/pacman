@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <string.h>
 #include <curses.h>
 #include <arpa/inet.h>
@@ -57,6 +58,10 @@ void leave_game(const int game_instance){
 }
 
 int main(int argc, char ** argv){
+	if(argc != 3) {
+		fprintf(stderr, "usage");
+		assert(false);
+	}
 	int game_instance = start_new_game();
 	memset(buffer,0,sizeof buffer);
 	strcpy(buffer,argv[1]);
