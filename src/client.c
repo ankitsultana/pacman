@@ -57,6 +57,17 @@ void leave_game(const int game_instance){
 	return;
 }
 
+void ping_test(int game_instance){
+	int i;
+	char tmp[MAX_MSG_SZ];
+	for(i=0; i<5; i++){
+		recv_message(game_instance);
+		memset(tmp,0,sizeof tmp);
+		strcpy(tmp,"lol");
+		send_message(game_instance,tmp);
+	}
+}
+
 int main(int argc, char ** argv){
 	if(argc != 3) {
 		fprintf(stderr, "usage");
@@ -69,7 +80,7 @@ int main(int argc, char ** argv){
 	strcat(tmp," ");
 	strcat(tmp,argv[2]);
 	send_message(game_instance,tmp);
-	//recv_message(game_instance);
+	ping_test(game_instance);
 	printf("%s\n",buffer);
 	sleep(1);
 	return 0;

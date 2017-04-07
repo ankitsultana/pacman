@@ -117,6 +117,7 @@ void get_latency(player_t * new_player, int iterations){
 		memset(buffer,0,sizeof buffer);
 		strcpy(buffer,"lol");
 		send(new_player->pid, buffer, sizeof buffer, 0);
+		recv(new_player->pid, buffer, sizeof buffer, 0);
 		long long end_time = time(&rawtime);
 		cumulative_latency += end_time - start_time;
 	}
