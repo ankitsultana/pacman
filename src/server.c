@@ -1,3 +1,4 @@
+#include <time.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -25,6 +26,7 @@ typedef struct{
 	int pid;
 	int gid;
 	data_t useless;
+	double latency;
 }player_t;
 
 
@@ -106,6 +108,22 @@ int init_listening_port(const char * port_number){
 	return listening_port;
 }
 
+void get_latency(player_t * new_player, int iterations){
+	long long cumulative_latency = 0;
+	int i;
+	for(i=0; i<iterations; i++){
+		time_t rawtime;
+		long long start_time = time(&rawtime);
+		memset(buffer,0,sizeof buffer);
+		strcpy(buffer,"lol");
+		send(new_player->pid, buffer, sizeof buffer, 0);
+		long long end_time = time(&rawtime);
+		cumulative_latency += end_time - start_time;
+	}
+	double avg_latency = (double)cumulative_latency/(double)iterations;
+	new_player->latency = avg_latency;
+}
+
 player_t* wait_for_new_player(int listening_port, int gid) {
 	struct sockaddr_storage client_addr;
 	socklen_t addr_sz;
@@ -134,6 +152,7 @@ player_t* wait_for_new_player(int listening_port, int gid) {
 	printf("%s\n",buffer);
 	sscanf(buffer,"%s%d",handle,&useless);
 	new_player = get_new_player(pid,gid,handle,useless);
+	get_latency(new_player,5);
 	return new_player;
 }
 
