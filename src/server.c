@@ -153,6 +153,7 @@ player_t* wait_for_new_player(int listening_port, int gid) {
 	sscanf(buffer,"%s%d",handle,&useless);
 	new_player = get_new_player(pid,gid,handle,useless);
 	get_latency(new_player,5);
+	printf("Player %s latency: %lf\n",new_player->handle, new_player->latency);
 	return new_player;
 }
 
