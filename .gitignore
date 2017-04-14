@@ -1,6 +1,9 @@
 server
 client
 
+# Secret
+secret/
+
 # Object files
 *.o
 *.ko
@@ -34,3 +37,7 @@ client
 # Debug files
 *.dSYM/
 *.su
+
+# trash
+*.sw[po]
+.fuse*
