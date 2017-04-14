@@ -1,8 +1,6 @@
 CC = gcc
-CC_FLAGS = -g -lncurses -Wall
+CC_FLAGS = -g -Wall
+LINKER_FLAGS = -lncurses -lpthread
 
-all: server client
-server: server.c
-	$(CC) $(CC_FLAGS) server.c -o server
-client: client.c
-	$(CC) $(CC_FLAGS) client.c -o client
+client: *.c *.h
+	$(CC) $(CC_FLAGS) client.c networking.c util.c $(LINKER_FLAGS) -o client

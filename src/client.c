@@ -1,87 +1,92 @@
+#define _POSIX_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
-#include <string.h>
-#include <curses.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <unistd.h>
+#include <stdbool.h>
 
-const int MAX_MSG_SZ = 128;
-char buffer[128] = {0};
+#include <ncurses.h>
+#include <pthread.h>
 
-int start_new_game(){
-	struct addrinfo specs, * addrinfo_ll;
-	memset(&specs,0,sizeof(specs));
-	specs.ai_family = AF_INET;
-	specs.ai_socktype = SOCK_STREAM;
-	if(getaddrinfo("127.0.0.1","6969",&specs,&addrinfo_ll)<0){
-		perror("getaddrinfo failed\n");
-		exit(0);
-	}
-	int sock_fd = socket(AF_INET,SOCK_STREAM,0);
-	if(sock_fd < 0){
-		perror("socket failed\n");
-		exit(0);
-	}
-	if(connect(sock_fd,addrinfo_ll->ai_addr,addrinfo_ll->ai_addrlen)<0){
-		perror("connect failed\n");
-		exit(0);
-	}
-	freeaddrinfo(addrinfo_ll);
-	return sock_fd;
+#include "networking.h"
+
+const char usage_fmt[] = "usage: %s server_ip server_port username\n";
+
+const char app_name[] = "pacmen";
+const char* argv0;
+
+void cry_usage() {
+	fprintf(stderr, usage_fmt, argv0);
+	exit(2);
 }
 
-void send_message(const int server, const char * message){
-	memset(buffer,0,sizeof buffer);
-	strcpy(buffer,message);
-	if(send(server,buffer,strlen(buffer),0) < 0){
-		perror("send failed\n");
-		exit(0);
-	}
+#define BUFSIZE 2048
+
+char* username;
+int sockfd;
+char* server_ipaddr;
+int server_port;
+int player_status;
+FILE* sockifp;
+FILE* sockofp;
+
+char buffer[BUFSIZE];
+
+void send_username(const char* username) {
+	fprintf(sockofp, "%s\n", username);
 }
 
-void recv_message(const int server){
-	memset(buffer,0,sizeof buffer);
-	if(recv(server,buffer,sizeof buffer,0) < 0){
-		perror("recv failed\n");
-		exit(0);
-	}
+void send_char(char ch) {
+	fprintf(sockofp, "%c", ch);
 }
 
-void leave_game(const int game_instance){
-	send_message(game_instance,"I want to leave");
-	return;
+void* sender_thread_func(void* arg) {
+	send_username(username);
+	while(true) {
+		char ch = getchar();
+		send_char(ch);
+	}
+	return NULL;
 }
 
-void ping_test(int game_instance){
-	int i;
-	char tmp[MAX_MSG_SZ];
-	for(i=0; i<5; i++){
-		recv_message(game_instance);
-		memset(tmp,0,sizeof tmp);
-		strcpy(tmp,"lol");
-		send_message(game_instance,tmp);
-	}
+void execute_message(char* message) {
+	fprintf(stderr, "Message:\n%s", buffer);
 }
 
-int main(int argc, char ** argv){
-	if(argc != 3) {
-		fprintf(stderr, "usage");
-		assert(false);
+void* receiver_thread_func(void* arg) {
+	int offset = 0;
+	while(fgets(buffer+offset, BUFSIZE, sockifp) != NULL) {
+		bool empty_line = (buffer[offset] == '\n');
+		while(buffer[offset] != '\0') {
+			offset++;
+		}
+		if(empty_line) {
+			execute_message(buffer);
+		}
 	}
-	int game_instance = start_new_game();
-	char tmp[MAX_MSG_SZ];
-	memset(tmp,0,sizeof tmp);
-	strcpy(tmp,argv[1]);
-	strcat(tmp," ");
-	strcat(tmp,argv[2]);
-	send_message(game_instance,tmp);
-	ping_test(game_instance);
-	printf("%s\n",buffer);
-	sleep(1);
+	fprintf(stderr, "Error reading data from server.\n");
+	return NULL;
+}
+
+int main(int argc, char* argv[]) {
+	// parse cmdline params
+	argv0 = argv[0];
+	if(argc != 4) {
+		cry_usage();
+	}
+	server_ipaddr = argv[1];
+	server_port = atoi(argv[2]);
+	username = argv[3];
+
+	// connect to server
+	sockfd = get_client_socket(server_ipaddr, server_port);
+	sockifp = fdopen(sockfd, "r");
+	sockofp = fdopen(sockfd, "w");
+	setvbuf(sockofp, NULL, _IONBF, BUFSIZ);
+	print_sock_info(sockfd, stderr);
+
+	// create threads
+	pthread_t sender_thread_id;
+	pthread_create(&sender_thread_id, NULL, sender_thread_func, NULL);
+	receiver_thread_func(NULL);
+
 	return 0;
 }
