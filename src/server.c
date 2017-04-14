@@ -1,3 +1,4 @@
+#include <sys/time.h>
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
@@ -112,15 +113,22 @@ void get_latency(player_t * new_player, int iterations){
 	long long cumulative_latency = 0;
 	int i;
 	for(i=0; i<iterations; i++){
-		time_t rawtime;
-		long long start_time = time(&rawtime);
+		//time_t rawtime;
+		struct timeval rawtime;
+		//long long start_time = time(&rawtime);
+		gettimeofday(&rawtime,NULL);
+		long long start_time = rawtime.tv_usec;
 		memset(buffer,0,sizeof buffer);
 		strcpy(buffer,"lol");
 		send(new_player->pid, buffer, sizeof buffer, 0);
 		recv(new_player->pid, buffer, sizeof buffer, 0);
-		long long end_time = time(&rawtime);
+		//sleep(1);
+		//long long end_time = time(&rawtime);
+		gettimeofday(&rawtime,NULL);
+		long long end_time = rawtime.tv_usec;
 		cumulative_latency += end_time - start_time;
 	}
+	printf("cumulative freq = %lld\n",cumulative_latency);
 	double avg_latency = (double)cumulative_latency/(double)iterations;
 	new_player->latency = avg_latency;
 }
@@ -153,7 +161,7 @@ player_t* wait_for_new_player(int listening_port, int gid) {
 	printf("%s\n",buffer);
 	sscanf(buffer,"%s%d",handle,&useless);
 	new_player = get_new_player(pid,gid,handle,useless);
-	get_latency(new_player,5);
+	get_latency(new_player,100);
 	printf("Player %s latency: %lf\n",new_player->handle, new_player->latency);
 	return new_player;
 }
