@@ -6,11 +6,8 @@
 #include <stdlib.h>
 
 void render(game_state_t *gs_ptr) {
-	setlocale(LC_ALL, "");
-	initscr();
-	raw();
-	noecho();
-	curs_set(0);
+	//setlocale(LC_ALL, "");
+	clear();
 	int r, c;
 	char temp[] = "x";
 	for(r = 0; r < gs_ptr->num_rows; r++) {
@@ -18,16 +15,15 @@ void render(game_state_t *gs_ptr) {
 		for(c = 0, curr_c = 0; c < gs_ptr->num_cols; c++, curr_c += 2) {
 			temp[0] = gs_ptr->grid[r][c];
 			if(temp[0] == 'X') {
-				mvprintw(r, curr_c, "\u2588");
-				mvprintw(r, curr_c + 1, "\u2588");
+				mvprintw(r, curr_c, "X");
+				mvprintw(r, curr_c + 1, "X");
 			} else {
 				mvprintw(r, curr_c, temp);
 				mvprintw(r, curr_c + 1, " ");
 			}
+			refresh();
 		}
 	}
-	char ch = getch();
-	endwin();
 }
 
 int render_main() {

@@ -39,7 +39,7 @@ int main() {
 	char *to_send = (char*)malloc(sizeof(char) * iter);
 	for(i = 0; i < iter; i++) {
 		to_send[i] = grid[i];
-		printf("%c", to_send[i]);
+		//printf("%c", to_send[i]);
 	}
 	// Send data to client
 	return 0;

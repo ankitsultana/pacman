@@ -4,6 +4,7 @@
 using namespace std;
 
 int main(int argc, char ** argv){
+	cout << argv[1] << " " << argv[2] << endl;
 	for(int i=0; i<2*atoi(argv[2]); i++){
 		cout << "X";
 	}
