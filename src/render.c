@@ -10,16 +10,20 @@ void render(game_state_t *gs_ptr) {
 	clear();
 	int r, c;
 	char temp[] = "x";
+	int max_x, max_y;
+	getmaxyx(stdscr,max_y,max_x);
+	int init_y = (max_y-gs_ptr->num_rows)/2;
+	int init_x = (max_x-(2*gs_ptr->num_cols))/2;
 	for(r = 0; r < gs_ptr->num_rows; r++) {
 		int curr_c;
 		for(c = 0, curr_c = 0; c < gs_ptr->num_cols; c++, curr_c += 2) {
 			temp[0] = gs_ptr->grid[r][c];
 			if(temp[0] == 'X') {
-				mvprintw(r, curr_c, "X");
-				mvprintw(r, curr_c + 1, "X");
+				mvprintw(init_y+r, init_x+curr_c, "X");
+				mvprintw(init_y+r, init_x+curr_c + 1, "X");
 			} else {
-				mvprintw(r, curr_c, temp);
-				mvprintw(r, curr_c + 1, " ");
+				mvprintw(init_y+r, init_x+curr_c, temp);
+				mvprintw(init_y+r, init_x+curr_c + 1, " ");
 			}
 			refresh();
 		}
