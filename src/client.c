@@ -30,16 +30,6 @@ void cry_usage() {
 
 player_t * me;
 
-void get_new_me(int player_id){
-	me = (player_t*)malloc(sizeof(player_t));
-	me->player_id = player_id;
-	me->pos.row = -1;
-	me->pos.col = -1;
-	me->dir = NODIR;
-	me->score = 0;
-	me->game = NULL;
-}
-
 void free_me(){
 	fprintf(error_log,"Freeing me\n");
 	free_game(me->game);
@@ -128,7 +118,7 @@ int execute_message(char* message) {
 				player_status = UNALLOCATED;
 				int player_id = -1;
 				sscanf(message+message_body_offset,"%d",&player_id);
-				get_new_me(player_id);
+				me = get_new_player(player_id);
 			} else {
 				unexpected_message_exception(possible_headers[ans],player_status);
 			}
@@ -138,8 +128,7 @@ int execute_message(char* message) {
 			if(player_status == UNREGISTERED){
 				player_status = EXITED;
 				free_me();
-			}
-			else{
+			} else {
 				unexpected_message_exception(possible_headers[ans],player_status);
 			}
 			break;
@@ -156,12 +145,10 @@ int execute_message(char* message) {
 		case SMH_init:;
 			if(player_status == UNALLOCATED) {
 				player_status = PLAYING;
-				// me->game = get_new_game();
-				// add_player(me->game,me);
-				parse_game_state_message(get_new_game(), message + message_body_offset);
-				// parse_game_state_message(me->game,message+message_body_offset);
+				me->game = get_new_game();
+				add_player(me->game,me);
+				parse_game_state_message(me->game,message+message_body_offset,error_log);
 				render(me->game);
-				//print_game_state(new_game,error_log);
 			} else {
 				unexpected_message_exception(possible_headers[ans],player_status);
 			}
@@ -170,7 +157,7 @@ int execute_message(char* message) {
 		case SMH_fullupd:
 			if(player_status == PLAYING) {
 				player_status = PLAYING;
-				parse_game_state_message(me->game,message+message_body_offset);
+				parse_game_state_message(me->game,message+message_body_offset,error_log);
 				render(me->game);
 			} else {
 				unexpected_message_exception(possible_headers[ans],player_status);
@@ -251,7 +238,7 @@ int main(int argc, char* argv[]) {
 
 	// create threads
 	pthread_t sender_thread_id;
-	pthread_create(&sender_thread_id, NULL, sender_thread_func, NULL);
+	//pthread_create(&sender_thread_id, NULL, sender_thread_func, NULL);
 	
 	receiver_thread_func(NULL);
 	fclose(error_log);

@@ -2,8 +2,6 @@
 #ifndef H_PLAYER
 #define H_PLAYER
 
-#include "game_state.h"
-
 typedef enum {
 	UNREGISTERED,
 	UNALLOCATED,
@@ -27,9 +25,12 @@ typedef struct pos_t {
 typedef struct player_t {
 	int player_id;
 	pos_t pos;
-	dir_t dir;
+	dir_t i_dir;
+	dir_t c_dir;
 	int score;
 	void * game;
 } player_t;
+
+player_t * get_new_player(int);
 
 #endif

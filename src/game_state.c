@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "game_state.h"
+#include "player.h"
 
 #define MAX_MSG_LEN 1300
 
@@ -12,7 +13,7 @@ game_state_t * get_new_game() {
 	ret->grid = NULL;
 	ret->corrupt = false;
 	ret->num_players = 0;
-	for(i=0; i<10; i++) ret->players[i] = NULL;
+	for(i=0; i<5; i++) ret->players[i] = NULL;
 	return ret;
 }
 
@@ -31,7 +32,7 @@ void add_player(game_state_t * game, player_t * player){
 
 // Read map as a string and populate game_state struct
 
-void parse_game_state_message(game_state_t* game_state, char * message){
+void parse_game_state_message(game_state_t* game_state, char * message, FILE * error_log){
 	char * token = strtok(message,"\n");
 	int i,j;
 	if(token == NULL){
@@ -57,7 +58,6 @@ void parse_game_state_message(game_state_t* game_state, char * message){
 			return ;
 		}
 		if(game_state->grid[i] == NULL){
-			printf("%lu %lu\n", game_state->num_cols, game_state);
 			game_state->grid[i] = (char*)malloc(game_state->num_cols*sizeof(char));
 		}
 		for(j=0; j<game_state->num_cols; j++) {
@@ -75,10 +75,38 @@ void parse_game_state_message(game_state_t* game_state, char * message){
 		return ;
 	//return game_state;
 	while(token != NULL){
-		int player_id, row, col, i_dir, c_dir;
+		int player_id, row, col, i_dir, c_dir, score;
 		char username[100];
-		sscanf(token,"%d%d%d%d%d%s",&player_id,&row,&col,&c_dir,&i_dir,username);
-
+		sscanf(token,"%d%d%d%d%d%d%s",&player_id,&row,&col,&c_dir,&i_dir,&score,username);
+		token = strtok(NULL,"\n");
+		fprintf(stderr,"\"%s\"\n",token);
+		bool player_exists = false;
+		for(i=0; i<5; i++){
+			if(game_state->players[i] != NULL && player_id == game_state->players[i]->player_id){
+				player_exists = true;
+				break;
+			}
+		}
+		if(player_exists){
+			game_state->players[i]->pos.row = row;
+			game_state->players[i]->pos.col = col;
+			game_state->players[i]->i_dir = i_dir;
+			game_state->players[i]->c_dir = c_dir;
+			game_state->players[i]->score = score;
+		}else{
+			if(i == 5){
+				// Game is already full. More players cannot be accomodated
+				fprintf(stderr,"Game Full");
+			}else{
+				player_t * new_player = get_new_player(player_id);
+				new_player->pos.row = row;
+				new_player->pos.col = col;
+				new_player->i_dir = i_dir;
+				new_player->c_dir = c_dir;
+				new_player->score = score;
+				add_player(game_state,new_player);
+			}
+		}
 	}
 }
 
