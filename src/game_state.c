@@ -21,8 +21,10 @@ void free_game(game_state_t * game){
 	int i;
 	for(i=0; i<game->num_rows; i++)
 		free(game->grid[i]);
+	free(game->grid);
 	for(i=0; i<game->num_players; i++)
 		free(game->players[i]);
+	free(game);
 }
 
 void add_player(game_state_t * game, player_t * player){
@@ -38,11 +40,11 @@ void parse_game_state_message(game_state_t* game_state, char * message, FILE * e
 	if(token == NULL){
 		//error
 		game_state->corrupt = true;
-		fprintf(stderr,"%s: Incomplete Message\n",__func__);
+		fprintf(error_log,"%s: Incomplete Message\n",__func__);
 		return;
 	}
 	sscanf(token,"%d%d",&game_state->num_rows,&game_state->num_cols);
-	fprintf(stderr,"\"%s\"\n",token);
+	fprintf(error_log,"\"%s\"\n",token);
 	if(game_state->grid == NULL){
 		game_state->grid = (char**)malloc(game_state->num_rows*sizeof(char*));
 		for(i=0; i<game_state->num_rows; i++)
@@ -50,11 +52,11 @@ void parse_game_state_message(game_state_t* game_state, char * message, FILE * e
 	}
 	for(i=0; i<game_state->num_rows; i++){
 		token = strtok(NULL,"\n");
-		fprintf(stderr,"\"%s\"\n",token);
+		fprintf(error_log,"\"%s\"\n",token);
 		if(token == NULL){
 			//error
 			game_state->corrupt = true;
-			fprintf(stderr,"%s: Incomplete Message\n",__func__);
+			fprintf(error_log,"%s: Incomplete Message\n",__func__);
 			return ;
 		}
 		if(game_state->grid[i] == NULL){
@@ -63,14 +65,14 @@ void parse_game_state_message(game_state_t* game_state, char * message, FILE * e
 		for(j=0; j<game_state->num_cols; j++) {
 			if(token[j] == '\0'){
 				game_state->corrupt = true;
-				fprintf(stderr,"%s: Inconsistent row length\n",__func__);
+				fprintf(error_log,"%s: Inconsistent row length\n",__func__);
 				return ;
 			}
 			game_state->grid[i][j] = token[j];
 		}
 	}
 	token = strtok(NULL,"\n");
-	fprintf(stderr,"\"%s\"\n",token);
+	fprintf(error_log,"\"%s\"\n",token);
 	if(token == NULL)
 		return ;
 	//return game_state;
@@ -79,7 +81,7 @@ void parse_game_state_message(game_state_t* game_state, char * message, FILE * e
 		char username[100];
 		sscanf(token,"%d%d%d%d%d%d%s",&player_id,&row,&col,&c_dir,&i_dir,&score,username);
 		token = strtok(NULL,"\n");
-		fprintf(stderr,"\"%s\"\n",token);
+		fprintf(error_log,"\"%s\"\n",token);
 		bool player_exists = false;
 		for(i=0; i<5; i++){
 			if(game_state->players[i] != NULL && player_id == game_state->players[i]->player_id){
@@ -96,7 +98,7 @@ void parse_game_state_message(game_state_t* game_state, char * message, FILE * e
 		}else{
 			if(i == 5){
 				// Game is already full. More players cannot be accomodated
-				fprintf(stderr,"Game Full");
+				fprintf(error_log,"Game Full");
 			}else{
 				player_t * new_player = get_new_player(player_id);
 				new_player->pos.row = row;

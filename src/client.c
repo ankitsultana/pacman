@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <ncurses.h>
 #include <pthread.h>
@@ -33,7 +34,6 @@ player_t * me;
 void free_me(){
 	fprintf(error_log,"Freeing me\n");
 	free_game(me->game);
-	free(me);
 	me = NULL;
 }
 
@@ -180,6 +180,7 @@ int execute_message(char* message) {
 	
 		case SMH_quit:
 			player_status = EXITED;
+			free_me();
 			return -1;
 			break;
 		default:
@@ -241,6 +242,8 @@ int main(int argc, char* argv[]) {
 	//pthread_create(&sender_thread_id, NULL, sender_thread_func, NULL);
 	
 	receiver_thread_func(NULL);
+	fclose(sockifp);
+	fclose(sockofp);
 	fclose(error_log);
 	endwin();
 
