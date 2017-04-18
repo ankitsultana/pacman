@@ -35,7 +35,7 @@ pthread_mutex_t me_mutex;
 
 void free_me(){
 	fprintf(error_log,"Freeing me\n");
-	free_game(me->game);
+	if (me != NULL) free_game(me->game);
 	me = NULL;
 }
 
@@ -66,19 +66,20 @@ void* sender_thread_func(void* arg) {
 	return NULL;
 }
 
-void init_curses(){
-	initscr();
-	cbreak();
-	noecho();
-	curs_set(0);
-}
-
 void display_message_center(const char * display_message){
 		clear();
 		int display_message_len = strlen(display_message);
 		int max_y, max_x;
 		getmaxyx(stdscr,max_y,max_x);
 		mvprintw(max_y/2,(max_x-display_message_len)/2,display_message);
+		refresh();
+}
+
+void display_message_bottom_corner(const char * display_message){
+		int display_message_len = strlen(display_message);
+		int max_y, max_x;
+		getmaxyx(stdscr,max_y,max_x);
+		mvprintw(max_y-1,0,display_message);
 		refresh();
 }
 
@@ -116,7 +117,9 @@ int execute_message(char* message) {
 	}
 	switch(ans){
 		case SMH_accept:;
-			display_message_center("Waiting to be allocated ... ");
+			//display_message_center("Waiting to be allocated ... ");
+			//display_message_bottom_corner("Press Q to quit Multiplayer Pacman");
+			render_unallocated_screen(error_log);
 			if(player_status == UNREGISTERED){
 				player_status = UNALLOCATED;
 				int player_id = -1, row, col;
@@ -154,8 +157,11 @@ int execute_message(char* message) {
 				player_status = PLAYING;
 				me->game = get_new_game();
 				add_player(me->game,me);
+				init_game_window(error_log);
+				init_scoreboard_window(error_log);
+				init_message_window(error_log);
 				parse_game_state_message(me->game,message+message_body_offset,error_log);
-				render(me->game);
+				render_game_screen(me->game, error_log);
 			} else {
 				unexpected_message_exception(possible_headers[ans],player_status);
 			}
@@ -165,7 +171,7 @@ int execute_message(char* message) {
 			if(player_status == PLAYING) {
 				player_status = PLAYING;
 				parse_game_state_message(me->game,message+message_body_offset,error_log);
-				render(me->game);
+				render_game_screen(me->game, error_log);
 			} else {
 				unexpected_message_exception(possible_headers[ans],player_status);
 			}
@@ -179,10 +185,16 @@ int execute_message(char* message) {
 			break;
 
 		case SMH_end:
-			if(player_status == PLAYING)
-				player_status = UNALLOCATED;
-			else
+			if(player_status == PLAYING) {
+				player_status = UNREGISTERED;
+				free_me();
+				destroy_scoreboard_window(error_log);
+				destroy_game_window(error_log);
+				destroy_message_window(error_log);
+				render_welcome_screen(error_log);
+			} else {
 				unexpected_message_exception(possible_headers[ans],player_status);
+			}
 			break;
 	
 		case SMH_quit:
@@ -319,7 +331,7 @@ void update(){
 		// TODO: Update score
 
 		// Render screen
-		render(me->game);
+		render_game_screen(me->game, error_log);
 		pthread_mutex_unlock(&me_mutex);
 		sleep(1);
 	}
@@ -352,13 +364,13 @@ int main(int argc, char* argv[]) {
 	print_sock_info(sockfd, error_log);
 
 	// init curses mode
-	init_curses();
+	init_curses(error_log);
 
 	// init me_mutex
 	pthread_mutex_init(&me_mutex,NULL);
 	
 	// display initial splash screen
-	display_message_center("Welcome to Multiplayer Pacman!");
+	render_welcome_screen(error_log);
 
 	// create threads
 	pthread_t sender_thread_id;
