@@ -78,7 +78,7 @@ void parse_game_state_message(game_state_t* game_state, char * message, FILE * e
 	//return game_state;
 	while(token != NULL){
 		int player_id, row, col, i_dir, c_dir, score;
-		char username[100];
+		char username[30];
 		sscanf(token,"%d%d%d%d%d%d%s",&player_id,&row,&col,&c_dir,&i_dir,&score,username);
 		token = strtok(NULL,"\n");
 		fprintf(error_log,"\"%s\"\n",token);
@@ -90,23 +90,26 @@ void parse_game_state_message(game_state_t* game_state, char * message, FILE * e
 			}
 		}
 		if(player_exists){
+			//game_state->grid[game_state->players[i]->pos.row][game_state->players[i]->pos.col] = ' ';
 			game_state->players[i]->pos.row = row;
 			game_state->players[i]->pos.col = col;
 			game_state->players[i]->i_dir = i_dir;
 			game_state->players[i]->c_dir = c_dir;
 			game_state->players[i]->score = score;
+			//game_state->grid[game_state->players[i]->pos.row][game_state->players[i]->pos.col] = (char)(i+'0');
 		}else{
 			if(i == 5){
 				// Game is already full. More players cannot be accomodated
 				fprintf(error_log,"Game Full");
 			}else{
-				player_t * new_player = get_new_player(player_id);
+				player_t * new_player = get_new_player(player_id,username);
 				new_player->pos.row = row;
 				new_player->pos.col = col;
 				new_player->i_dir = i_dir;
 				new_player->c_dir = c_dir;
 				new_player->score = score;
 				add_player(game_state,new_player);
+				//game_state->grid[game_state->players[i]->pos.row][game_state->players[i]->pos.col] = (char)(game_state->num_players-1+(int)('0'));
 			}
 		}
 	}

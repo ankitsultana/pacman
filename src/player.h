@@ -29,8 +29,9 @@ typedef struct player_t {
 	dir_t c_dir;
 	int score;
 	void * game;
+	char username[30];
 } player_t;
 
-player_t * get_new_player(int);
+player_t * get_new_player(int, char*);
 
 #endif

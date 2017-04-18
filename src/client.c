@@ -31,6 +31,8 @@ void cry_usage() {
 
 player_t * me;
 
+pthread_mutex_t me_mutex;
+
 void free_me(){
 	fprintf(error_log,"Freeing me\n");
 	free_game(me->game);
@@ -83,6 +85,7 @@ void display_message_center(const char * display_message){
 #define unexpected_message_exception(message,player_status) fprintf(error_log,"Unexpected %s Message to Player with Status %d\n", message, player_status);
 
 int execute_message(char* message) {
+	pthread_mutex_lock(&me_mutex);
 	fprintf(error_log, "Message:\n%s", buffer);
 	
 	char message_header[HEADER_SZ];
@@ -116,9 +119,13 @@ int execute_message(char* message) {
 			display_message_center("Waiting to be allocated ... ");
 			if(player_status == UNREGISTERED){
 				player_status = UNALLOCATED;
-				int player_id = -1;
-				sscanf(message+message_body_offset,"%d",&player_id);
-				me = get_new_player(player_id);
+				int player_id = -1, row, col;
+				sscanf(message+message_body_offset,"%d%d%d",&player_id, &row, &col);
+				me = get_new_player(player_id,username);
+				me->pos.row = row;
+				me->pos.col = col;
+				me->c_dir = RIGHT;
+				me->i_dir = RIGHT;
 			} else {
 				unexpected_message_exception(possible_headers[ans],player_status);
 			}
@@ -186,6 +193,7 @@ int execute_message(char* message) {
 		default:
 			break;
 	}
+	pthread_mutex_unlock(&me_mutex);
 	return 0;
 }
 
@@ -211,6 +219,118 @@ void* receiver_thread_func(void* arg) {
 	return NULL;
 }
 
+pos_t above(pos_t ref){
+	pos_t ret = ref;
+	ret.row -= 1;
+	return ret;
+}
+
+pos_t below(pos_t ref){
+	pos_t ret = ref;
+	ret.row += 1;
+	return ret;
+}
+
+pos_t leftof(pos_t ref){
+	pos_t ret = ref;
+	ret.col -= 1;
+	return ret;
+}
+
+pos_t rightof(pos_t ref){
+	pos_t ret = ref;
+	ret.col += 1;
+	return ret;
+}
+
+bool valid(pos_t pos){
+	if(((game_state_t*)(me->game))->grid[pos.row][pos.col] != 'X') return true;
+	else return false;
+	return true;
+}
+
+void update_player_dir(int player_index){
+	if(((game_state_t*)(me->game))->players[player_index]->c_dir == ((game_state_t*)(me->game))->players[player_index]->i_dir) return;
+	else {
+		pos_t current_pos = ((game_state_t*)(me->game))->players[player_index]->pos;
+		switch(((game_state_t*)(me->game))->players[player_index]->i_dir){
+			case UP:
+				if(valid(above(current_pos)))
+					((game_state_t*)(me->game))->players[player_index]->c_dir = ((game_state_t*)(me->game))->players[player_index]->i_dir;
+				break;
+			case DOWN:
+				if(valid(below(current_pos)))
+					((game_state_t*)(me->game))->players[player_index]->c_dir = ((game_state_t*)(me->game))->players[player_index]->i_dir;
+				break;
+			case LEFT:
+				if(valid(leftof(current_pos)))
+					((game_state_t*)(me->game))->players[player_index]->c_dir = ((game_state_t*)(me->game))->players[player_index]->i_dir;
+				break;
+			case RIGHT:
+				if(valid(rightof(current_pos)))
+					((game_state_t*)(me->game))->players[player_index]->c_dir = ((game_state_t*)(me->game))->players[player_index]->i_dir;
+				break;
+			case NODIR:
+				break;
+			default:
+				fprintf(error_log,"%s: Invalid i_dir for player having id %d\n",__func__,((game_state_t*)(me->game))->players[player_index]->player_id);
+				break;
+		}
+	}
+}
+
+void update_player_pos(int player_index){
+	switch(((game_state_t*)(me->game))->players[player_index]->c_dir){
+		case UP:
+			if(valid(above(((game_state_t*)(me->game))->players[player_index]->pos)))
+				((game_state_t*)(me->game))->players[player_index]->pos = above(((game_state_t*)(me->game))->players[player_index]->pos);
+			break;
+		case DOWN:
+			if(valid(below(((game_state_t*)(me->game))->players[player_index]->pos)))
+				((game_state_t*)(me->game))->players[player_index]->pos = below(((game_state_t*)(me->game))->players[player_index]->pos);
+			break;
+		case LEFT:
+			if(valid(leftof(((game_state_t*)(me->game))->players[player_index]->pos)))
+				((game_state_t*)(me->game))->players[player_index]->pos = leftof(((game_state_t*)(me->game))->players[player_index]->pos);
+			break;
+		case RIGHT:
+			if(valid(rightof(((game_state_t*)(me->game))->players[player_index]->pos)))
+				((game_state_t*)(me->game))->players[player_index]->pos = rightof(((game_state_t*)(me->game))->players[player_index]->pos);
+			break;
+		case NODIR:
+			break;
+	}
+	fprintf(error_log, "New position (%s): row = %d col = %d\n", ((game_state_t*)(me->game))->players[player_index]->username,((game_state_t*)(me->game))->players[player_index]->pos.row,((game_state_t*)(me->game))->players[player_index]->pos.col);
+}
+
+void update(){
+	if(player_status == PLAYING){
+		fprintf(error_log, "Updater thread active!!\n");
+		pthread_mutex_lock(&me_mutex);
+		fprintf(error_log, "Lock acquired!\n");
+		// Perform updates
+		int i;
+		// Update directions
+		for(i=0; i<((game_state_t*)(me->game))->num_players; i++)
+			update_player_dir(i);
+		// Update positions
+		for(i=0; i<((game_state_t*)(me->game))->num_players; i++)
+			update_player_pos(i);
+		// TODO: Update score
+
+		// Render screen
+		render(me->game);
+		pthread_mutex_unlock(&me_mutex);
+		sleep(1);
+	}
+}
+
+void* updater_thread_func(void* arg) {
+	while(true){
+		update();
+	}
+}
+
 int main(int argc, char* argv[]) {
 	// open error logfile
 	error_log = fopen("../secret/error.log","w");
@@ -231,20 +351,27 @@ int main(int argc, char* argv[]) {
 	setvbuf(sockofp, NULL, _IONBF, BUFSIZ);
 	print_sock_info(sockfd, error_log);
 
-	//init curses mode
+	// init curses mode
 	init_curses();
+
+	// init me_mutex
+	pthread_mutex_init(&me_mutex,NULL);
 	
 	// display initial splash screen
 	display_message_center("Welcome to Multiplayer Pacman!");
 
 	// create threads
 	pthread_t sender_thread_id;
-	//pthread_create(&sender_thread_id, NULL, sender_thread_func, NULL);
+	pthread_create(&sender_thread_id, NULL, sender_thread_func, NULL);
+
+	pthread_t updater_thread_id;
+	pthread_create(&updater_thread_id, NULL, updater_thread_func, NULL);
 	
 	receiver_thread_func(NULL);
 	fclose(sockifp);
 	fclose(sockofp);
 	fclose(error_log);
+	pthread_mutex_destroy(&me_mutex);
 	endwin();
 
 	return 0;
