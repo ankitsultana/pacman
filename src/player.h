@@ -29,6 +29,7 @@ typedef struct player_t {
 	pos_t pos;
 	dir_t i_dir;
 	dir_t c_dir;
+	player_status_t status;
 	int score;
 	void * game;
 	char username[30];

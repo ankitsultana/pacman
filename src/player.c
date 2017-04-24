@@ -9,6 +9,7 @@ player_t* get_new_player(int player_id, char * username){
 	new_player->pos.col = -1;
 	new_player->c_dir = NODIR;
 	new_player->i_dir = NODIR;
+	new_player->status = UNREGISTERED;
 	new_player->score = 0;
 	new_player->game = NULL;
 	new_player->ifp = NULL;
@@ -30,4 +31,18 @@ player_t* get_player_by_username(player_t** plarr, int size, const char* usernam
 		}
 	}
 	return NULL;
+}
+
+int add_player_to_list(player_t** plarr, int size, player_t* pl) {
+	for(int i=0; i<size; ++i) {
+		if(plarr[i] == NULL) {
+			plarr[i] = pl;
+			return i;
+		}
+	}
+	return -1;
+}
+
+void remove_player_from_list(player_t** plarr, int id) {
+	plarr[id] = NULL;
 }
