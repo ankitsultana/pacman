@@ -2,6 +2,8 @@
 #ifndef H_PLAYER
 #define H_PLAYER
 
+#include <stdio.h>
+
 typedef enum {
 	UNREGISTERED,
 	UNALLOCATED,
@@ -30,6 +32,9 @@ typedef struct player_t {
 	int score;
 	void * game;
 	char username[30];
+	int sockfd;
+	FILE* ifp;
+	FILE* ofp;
 } player_t;
 
 player_t * get_new_player(int, char*);

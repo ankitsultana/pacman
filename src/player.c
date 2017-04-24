@@ -11,6 +11,23 @@ player_t* get_new_player(int player_id, char * username){
 	new_player->i_dir = NODIR;
 	new_player->score = 0;
 	new_player->game = NULL;
-	strcpy(new_player->username,username);
+	new_player->ifp = NULL;
+	new_player->ofp = NULL;
+	new_player->sockfd = -1;
+	if(username == NULL) {
+		new_player->username[0] = '\0';
+	}
+	else {
+		strcpy(new_player->username,username);
+	}
 	return new_player;
+}
+
+player_t* get_player_by_username(player_t** plarr, int size, const char* username) {
+	for(int i=0; i<size; ++i) {
+		if(strcmp(plarr[i]->username, username) == 0) {
+			return plarr[i];
+		}
+	}
+	return NULL;
 }
