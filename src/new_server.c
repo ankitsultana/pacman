@@ -51,7 +51,7 @@ void * listener_thread_func(void * arg) {
 
 int main(int argc, char ** argv) {
 	// open error logfile
-	error_log = fopen("../secret/server.error.log", "w");
+	error_log = stderr;
 
 	// parse command line args
 	argv0 = argv[0];
