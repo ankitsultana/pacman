@@ -47,7 +47,8 @@ player_status_t player_status = UNREGISTERED;
 FILE* sockifp;
 FILE* sockofp;
 
-char buffer[BUFSIZE];
+char receive_buffer[BUFSIZE];
+char send_buffer[BUFSIZE];
 
 void send_username(const char* username) {
 	fprintf(sockofp, "%s\n", username);
@@ -59,9 +60,21 @@ void send_char(char ch) {
 
 void* sender_thread_func(void* arg) {
 	send_username(username);
+	int message_len = 0;
+	memset(send_buffer,0,sizeof(send_buffer));
 	while(true) {
 		char ch = getch();
-		send_char(ch);
+		//send_char(ch);
+		if(ch != '\n') {
+			send_buffer[message_len++] = ch;
+		} else {
+			send_buffer[message_len++] = '\n';
+			send_buffer[message_len++] = '\0';
+			fprintf(sockofp, "%s\n", send_buffer);
+			fprintf(error_log, "%s: Sending: %s\n", __func__, send_buffer);
+			message_len = 0;
+			memset(send_buffer,0,sizeof(send_buffer));
+		}
 	}
 	return NULL;
 }
@@ -87,7 +100,7 @@ void display_message_bottom_corner(const char * display_message){
 
 int execute_message(char* message) {
 	pthread_mutex_lock(&me_mutex);
-	fprintf(error_log, "Message:\n%s", buffer);
+	fprintf(error_log, "Message:\n%s", receive_buffer);
 	
 	char message_header[HEADER_SZ];
 	char possible_headers[][HEADER_SZ] = 
@@ -213,14 +226,14 @@ int execute_message(char* message) {
 
 void* receiver_thread_func(void* arg) {
 	int offset = 0;
-	while(fgets(buffer+offset, BUFSIZE, sockifp) != NULL) {
-		bool empty_line = (buffer[offset] == '\n');
-		while(buffer[offset] != '\0') {
+	while(fgets(receive_buffer+offset, BUFSIZE, sockifp) != NULL) {
+		bool empty_line = (receive_buffer[offset] == '\n');
+		while(receive_buffer[offset] != '\0') {
 			offset++;
 		}
 		if(empty_line) {
 			offset = 0;
-			int status = execute_message(buffer);
+			int status = execute_message(receive_buffer);
 			if(status == -1){
 				fprintf(error_log, "Quitting Game Now...\n");
 				return NULL;
@@ -345,7 +358,7 @@ void* updater_thread_func(void* arg) {
 
 int main(int argc, char* argv[]) {
 	// open error logfile
-	error_log = fopen("../secret/error.log","w");
+	error_log = fopen("../secret/client.error.log","w");
 
 	// parse cmdline params
 	argv0 = argv[0];

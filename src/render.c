@@ -60,6 +60,23 @@ void print_message(const char * msg, FILE * error_log) {
 	wrefresh(_message_window);
 }
 
+void clear_window(WINDOW * win, FILE * error_log) {
+	if(win == NULL) {
+		fprintf(error_log, "%s: Window doesn't exist!\n", __func__);
+		return ;
+	}
+	int max_y, max_x, i;
+	getmaxyx(win, max_y, max_x);
+	char spaces[max_x+1];
+	for(i=0; i<max_x; i++)
+		spaces[i] = ' ';
+	spaces[i] = '\0';
+	for(i=0; i<max_y; i++)
+		mvwprintw(win, i, 0, spaces);
+	wrefresh(win);
+	return;
+}
+
 void destroy_message_window(FILE * error_log) {
 	clear_window(_message_window, error_log);
 	delwin(_message_window);
@@ -165,22 +182,6 @@ void render_unallocated_screen(FILE * error_log) {
 	refresh();
 }
 
-void clear_window(WINDOW * win, FILE * error_log) {
-	if(win == NULL) {
-		fprintf(error_log, "%s: Window doesn't exist!\n", __func__);
-		return ;
-	}
-	int max_y, max_x, i;
-	getmaxyx(win, max_y, max_x);
-	char spaces[max_x+1];
-	for(i=0; i<max_x; i++)
-		spaces[i] = ' ';
-	spaces[i] = '\0';
-	for(i=0; i<max_y; i++)
-		mvwprintw(win, i, 0, spaces);
-	wrefresh(win);
-	return;
-}
 
 /*
 int render_main() {
