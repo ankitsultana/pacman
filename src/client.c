@@ -61,10 +61,11 @@ void send_char(char ch) {
 void* sender_thread_func(void* arg) {
 	send_username(username);
 	int message_len = 0;
-	memset(send_buffer,0,sizeof(send_buffer));
+	//memset(send_buffer,0,sizeof(send_buffer));
 	while(true) {
 		char ch = getch();
-		//send_char(ch);
+		send_char(ch);
+		/*
 		if(ch != '\n') {
 			send_buffer[message_len++] = ch;
 		} else {
@@ -75,6 +76,7 @@ void* sender_thread_func(void* arg) {
 			message_len = 0;
 			memset(send_buffer,0,sizeof(send_buffer));
 		}
+		*/
 	}
 	return NULL;
 }
