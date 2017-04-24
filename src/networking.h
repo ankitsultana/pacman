@@ -10,4 +10,6 @@ void get_sock_info(int sockfd, char* my_ipaddr, int* p_my_port, char* peer_ipadd
 
 void print_sock_info(int sockfd, FILE* stream);
 
+int get_server_socket(int port);
+
 #endif	// H_NETWORKING

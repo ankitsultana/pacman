@@ -61,7 +61,7 @@ int get_client_socket(const char* ipaddr, int port)
 
 int get_server_socket(int port)
 {
-	int sockfd, err;
+	int sockfd;
 	struct sockaddr_in addr;
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if(sockfd == -1) {
@@ -70,7 +70,7 @@ int get_server_socket(int port)
 	}
 	set_socket_option(sockfd, SOL_SOCKET, SO_REUSEADDR);
 	set_socket_option(sockfd, IPPROTO_TCP, TCP_NODELAY);
-	set_sockaddr_in(&addr, "127.0.0.1", port);
+	set_sockaddr_in(&addr, "0.0.0.0", port);
 	bind(sockfd, (struct sockaddr *) &addr, sizeof(addr));
 	return sockfd;
 }
