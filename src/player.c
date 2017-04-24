@@ -24,25 +24,25 @@ player_t* get_new_player(int player_id, char * username){
 	return new_player;
 }
 
-player_t* get_player_by_username(player_t** plarr, int size, const char* username) {
-	for(int i=0; i<size; ++i) {
-		if(strcmp(plarr[i]->username, username) == 0) {
-			return plarr[i];
+player_t* get_player_by_username(player_list_t* pplist, const char* username) {
+	for(int i=0; i<MAX_PLAYERS; ++i) {
+		if(pplist->arr[i] != NULL && strcmp(pplist->arr[i]->username, username) == 0) {
+			return pplist->arr[i];
 		}
 	}
 	return NULL;
 }
 
-int add_player_to_list(player_t** plarr, int size, player_t* pl) {
-	for(int i=0; i<size; ++i) {
-		if(plarr[i] == NULL) {
-			plarr[i] = pl;
+int add_player_to_list(player_list_t* pplist, player_t* pl) {
+	for(int i=0; i<MAX_PLAYERS; ++i) {
+		if(pplist->arr[i] == NULL) {
+			pplist->arr[i] = pl;
 			return i;
 		}
 	}
 	return -1;
 }
 
-void remove_player_from_list(player_t** plarr, int id) {
-	plarr[id] = NULL;
+void remove_player_from_list(player_list_t* pplist, int id) {
+	pplist->arr[id] = NULL;
 }

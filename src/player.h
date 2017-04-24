@@ -38,6 +38,17 @@ typedef struct player_t {
 	FILE* ofp;
 } player_t;
 
+#define MAX_PLAYERS 200
+
+typedef struct player_list_t {
+	player_t* arr[MAX_PLAYERS];
+	int size;
+	int unallocated;
+} player_list_t;
+
 player_t * get_new_player(int, char*);
+player_t* get_player_by_username(player_list_t* pplist, const char* username);
+int add_player_to_list(player_list_t* pplist, player_t* pl);
+void remove_player_from_list(player_list_t* pplist, int id);
 
 #endif
