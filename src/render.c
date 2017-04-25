@@ -120,7 +120,7 @@ void render_game_screen(game_state_t *gs_ptr, FILE* error_log) {
 		fprintf(error_log, "%s: _game_window not inited\n", __func__);
 		return ;
 	}
-	clear();
+	//clear();
 	int r, c, i;
 	char temp[] = "x";
 	int max_x, max_y;
