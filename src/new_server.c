@@ -41,17 +41,21 @@ void cry_usage(){
 void* player_thread_func(void*);
 void* game_thread_func(void*);
 
-void create_map_str() {
-  FILE *map_file = fopen(map_filename, "r");
-  int size = 0;
-  while(fgets(MAP + size, 1000 - size, map_file) != NULL) {
-    size = strlen(MAP);
+void create_map_str(char **grid) {
+  int size = 0, i, j;
+  sprintf(MAP, "%d %d\n", 16, 16);
+  int iter = strlen(MAP);
+  for(i = 0; i < 16; i++) {
+    for(j = 0; j < 16; j++) {
+      MAP[iter++] = grid[i][j];
+    }
+    MAP[iter++] = '\n';
   }
+  MAP[iter++] = '\0';
 }
 
 void * listener_thread_func(void * arg) {
 	// listen on listening socket wiht a maximum of 5 connections queued
-  create_map_str();
 	while(listen(sockfd_listen, 5) == 0) {
 		// establish connection with the new player
 		struct sockaddr_storage client_addr;
@@ -97,6 +101,7 @@ void * listener_thread_func(void * arg) {
           fgets(game->grid[i], game->num_cols + 3, map_file);
           assert(game->grid[i][game->num_cols+1] == '\0');
         }
+        create_map_str(game->grid);
         game->num_players = PLAYERS_PER_GAME;
         int ctr = 0;
         for(i = 0; i < MAX_PLAYERS; i++) {
@@ -122,6 +127,10 @@ void * listener_thread_func(void * arg) {
     }
 	}
 	return NULL;
+}
+
+bool is_empty(char c) {
+  return c == ' ' || c == '*' || c == '.';
 }
 
 void* game_thread_func(void *arg) {
@@ -169,22 +178,22 @@ void* game_thread_func(void *arg) {
       r = player->pos.row, c = player->pos.col;
       switch(player->i_dir) {
         case UP:
-          if(game->grid[r-1][c] == ' ' || game->grid[r-1][c] == '.') {
+          if(is_empty(game->grid[r-1][c])) {// == ' ' || game->grid[r-1][c] == '.') {
             player->c_dir = UP;
           }
           break;
         case DOWN:
-          if(game->grid[r+1][c] == ' ' || game->grid[r+1][c] == '.') {
+          if(is_empty(game->grid[r+1][c])) {// == ' ' || game->grid[r+1][c] == '.') {
             player->c_dir = DOWN;
           }
           break;
         case LEFT:
-          if(game->grid[r][c-1] == ' ' || game->grid[r][c-1] == '.') {
+          if(is_empty(game->grid[r][c-1])) {// == ' ' || game->grid[r][c-1] == '.') {
             player->c_dir = LEFT;
           }
           break;
         case RIGHT:
-          if(game->grid[r][c+1] == ' ' || game->grid[r][c+1] == '.') {
+          if(is_empty(game->grid[r][c+1])) {// == ' ' || game->grid[r][c+1] == '.') {
             player->c_dir = RIGHT;
           }
           break;
@@ -196,7 +205,7 @@ void* game_thread_func(void *arg) {
       }
       switch(player->c_dir) {
         case UP:
-          if(game->grid[r-1][c] == ' ' || game->grid[r-1][c] == '.') {
+          if(is_empty(game->grid[r-1][c])) {// == ' ' || game->grid[r-1][c] == '.') {
             player->score += game->grid[r-1][c] == '.';
             game->grid[r][c] = ' ';
             game->grid[r-1][c] = 'P';
@@ -205,7 +214,7 @@ void* game_thread_func(void *arg) {
           }
           break;
         case DOWN:
-          if(game->grid[r+1][c] == ' ' || game->grid[r+1][c] == '.') {
+          if(is_empty(game->grid[r+1][c])) {// == ' ' || game->grid[r+1][c] == '.') {
             player->score += game->grid[r+1][c] == '.';
             game->grid[r][c] = ' ';
             game->grid[r+1][c] = 'P';
@@ -214,7 +223,7 @@ void* game_thread_func(void *arg) {
           }
           break;
         case LEFT:
-          if(game->grid[r][c-1] == ' ' || game->grid[r][c-1] == '.') {
+          if(is_empty(game->grid[r][c-1])) {// == ' ' || game->grid[r][c-1] == '.') {
             player->score += game->grid[r][c-1] == '.';
             game->grid[r][c] = ' ';
             game->grid[r][c-1] = 'P';
@@ -223,7 +232,7 @@ void* game_thread_func(void *arg) {
           }
           break;
         case RIGHT:
-          if(game->grid[r][c+1] == ' ' || game->grid[r][c+1] == '.') {
+          if(is_empty(game->grid[r][c+1])) {// == ' ' || game->grid[r][c+1] == '.') {
             player->score += game->grid[r][c+1] == '.';
             game->grid[r][c] = ' ';
             game->grid[r][c+1] = 'P';
@@ -252,6 +261,7 @@ void* game_thread_func(void *arg) {
       base = strlen(buf);
     }
     printf("Sending: %s\n", buf);
+    create_map_str(game->grid);
     for(i = 0; i < game->num_players; i++) {
       fprintf(game->players[i]->ofp, "fullupd\n%s%s\n", MAP, buf);
     }
