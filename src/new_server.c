@@ -47,7 +47,11 @@ void create_map_str(char **grid) {
   int iter = strlen(MAP);
   for(i = 0; i < 16; i++) {
     for(j = 0; j < 16; j++) {
-      MAP[iter++] = grid[i][j];
+			if(grid[i][j] == 'P') {
+				MAP[iter++] = ' ';
+			} else {
+      	MAP[iter++] = grid[i][j];
+			}
     }
     MAP[iter++] = '\n';
   }
@@ -260,7 +264,6 @@ void* game_thread_func(void *arg) {
           player->username);
       base = strlen(buf);
     }
-    printf("Sending: %s\n", buf);
     create_map_str(game->grid);
     for(i = 0; i < game->num_players; i++) {
       fprintf(game->players[i]->ofp, "fullupd\n%s%s\n", MAP, buf);
