@@ -22,7 +22,7 @@ const char* argv0;
 FILE * error_log;
 
 void cry_usage() {
-	fprintf(error_log, usage_fmt, argv0);
+	fprintf(stderr, usage_fmt, argv0);
 	exit(2);
 }
 
@@ -380,9 +380,6 @@ void* updater_thread_func(void* arg) {
 }
 
 int main(int argc, char* argv[]) {
-	// open error logfile
-	error_log = fopen("../secret/client.error.log","w");
-
 	// parse cmdline params
 	argv0 = argv[0];
 	if(argc != 4) {
@@ -392,6 +389,11 @@ int main(int argc, char* argv[]) {
 	server_port = atoi(argv[2]);
 	username = argv[3];
 	
+	// open error logfile
+	char errfile[100];
+	sprintf(errfile, "../secret/%s.client.error.log", username);
+	error_log = fopen(errfile,"w");
+
 	// connect to server
 	sockfd = get_client_socket(server_ipaddr, server_port);
 	sockifp = fdopen(sockfd, "r");
