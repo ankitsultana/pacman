@@ -41,6 +41,9 @@ void cry_usage(){
 void* player_thread_func(void*);
 void* game_thread_func(void*);
 
+int killed_players_cnt;
+int killed[100];
+
 void create_map_str(char **grid) {
   int size = 0, i, j;
   sprintf(MAP, "%d %d\n", 16, 16);
@@ -81,7 +84,7 @@ void * listener_thread_func(void * arg) {
       fscanf(player->ifp, "%s", player->username);
       int i;
       for(i = 0; i < MAX_PLAYERS; i++) {
-        if(plist.arr[i] != NULL && strcmp(plist.arr[i]->username, player->username) == 0) { // TODO : Compare only first two chars
+				if(plist.arr[i] != NULL && plist.arr[i]->username[0] == player->username[0] && plist.arr[i]->username[1] == player->username[1]) {
           fprintf(player->ofp, "taken\n\n");
           ok = false;
           free(player);
@@ -92,7 +95,7 @@ void * listener_thread_func(void * arg) {
     if(ok) {
       player->player_id = add_player_to_list(&plist, player);
       fprintf(player->ofp, "accept\n%d\n\n", player->player_id);
-	  player->status = UNALLOCATED;
+	  	player->status = UNALLOCATED;
       plist.unallocated++;
       if(plist.unallocated % PLAYERS_PER_GAME == 0) {
         int i;
@@ -136,6 +139,11 @@ void * listener_thread_func(void * arg) {
 bool is_empty(char c) {
   return c == ' ' || c == '*' || c == '.';
 }
+int add_score(char c) {
+	if(c == '.') return 1;
+	else if(c == '*') return 5;
+	return 0;
+}
 
 void* game_thread_func(void *arg) {
   int i, j;
@@ -176,28 +184,44 @@ void* game_thread_func(void *arg) {
   char buf[300];
   while(true) {
     usleep(TICK_TOCK * 1000);
+		if(killed_players_cnt > 0) {
+			for(j = 0; j < killed_players_cnt; j++) {
+				for(i = 0; i < game->num_players; i++) {
+					if(game->players[i]->player_id == killed[j]) {
+						int r = game->players[i]->pos.row, c = game->players[i]->pos.col;
+						game->grid[r][c] = ' ';
+						free(game->players[i]);
+						if(game->num_players > 1) {
+							game->players[i] = game->players[game->num_players-1];
+						}
+						game->num_players--;
+					}
+				}
+			}
+			killed_players_cnt = 0;
+		}
     for(i = 0; i < game->num_players; i++) {
       player = game->players[i];
       int r, c;
       r = player->pos.row, c = player->pos.col;
       switch(player->i_dir) {
         case UP:
-          if(is_empty(game->grid[r-1][c])) {// == ' ' || game->grid[r-1][c] == '.') {
+          if(is_empty(game->grid[r-1][c])) {
             player->c_dir = UP;
           }
           break;
         case DOWN:
-          if(is_empty(game->grid[r+1][c])) {// == ' ' || game->grid[r+1][c] == '.') {
+          if(is_empty(game->grid[r+1][c])) {
             player->c_dir = DOWN;
           }
           break;
         case LEFT:
-          if(is_empty(game->grid[r][c-1])) {// == ' ' || game->grid[r][c-1] == '.') {
+          if(is_empty(game->grid[r][c-1])) {
             player->c_dir = LEFT;
           }
           break;
         case RIGHT:
-          if(is_empty(game->grid[r][c+1])) {// == ' ' || game->grid[r][c+1] == '.') {
+          if(is_empty(game->grid[r][c+1])) {
             player->c_dir = RIGHT;
           }
           break;
@@ -209,8 +233,8 @@ void* game_thread_func(void *arg) {
       }
       switch(player->c_dir) {
         case UP:
-          if(is_empty(game->grid[r-1][c])) {// == ' ' || game->grid[r-1][c] == '.') {
-            player->score += game->grid[r-1][c] == '.';
+          if(is_empty(game->grid[r-1][c])) {
+            player->score += add_score(game->grid[r-1][c]);
             game->grid[r][c] = ' ';
             game->grid[r-1][c] = 'P';
             player->pos.row = r - 1;
@@ -218,8 +242,8 @@ void* game_thread_func(void *arg) {
           }
           break;
         case DOWN:
-          if(is_empty(game->grid[r+1][c])) {// == ' ' || game->grid[r+1][c] == '.') {
-            player->score += game->grid[r+1][c] == '.';
+          if(is_empty(game->grid[r+1][c])) {
+            player->score += add_score(game->grid[r+1][c]);
             game->grid[r][c] = ' ';
             game->grid[r+1][c] = 'P';
             player->pos.row = r + 1;
@@ -227,8 +251,8 @@ void* game_thread_func(void *arg) {
           }
           break;
         case LEFT:
-          if(is_empty(game->grid[r][c-1])) {// == ' ' || game->grid[r][c-1] == '.') {
-            player->score += game->grid[r][c-1] == '.';
+          if(is_empty(game->grid[r][c-1])) {
+            player->score += add_score(game->grid[r][c-1]);
             game->grid[r][c] = ' ';
             game->grid[r][c-1] = 'P';
             player->pos.row = r;
@@ -236,8 +260,8 @@ void* game_thread_func(void *arg) {
           }
           break;
         case RIGHT:
-          if(is_empty(game->grid[r][c+1])) {// == ' ' || game->grid[r][c+1] == '.') {
-            player->score += game->grid[r][c+1] == '.';
+          if(is_empty(game->grid[r][c+1])) {
+            player->score += add_score(game->grid[r][c+1]);
             game->grid[r][c] = ' ';
             game->grid[r][c+1] = 'P';
             player->pos.row = r;
@@ -280,7 +304,8 @@ void* player_thread_func(void* arg) {
 	while(true) {
 		ch = fgetc(player->ifp);
     if(ch == EOF) {
-      my_perror();
+			killed[killed_players_cnt++] = player->player_id;
+			remove_player_from_list(&plist, player->player_id);
       break;
     }
     if(player->flag == 1) {
@@ -304,7 +329,8 @@ void* player_thread_func(void* arg) {
         case '\n':
           break;
         case 'q':
-          // quit
+					killed[killed_players_cnt++] = player->player_id;
+					remove_player_from_list(&plist, player->player_id);
         default:
           fprintf(stderr, "%d (%s) pressed (%c)\n", player->player_id, player->username, ch);
       }
