@@ -115,6 +115,7 @@ void parse_game_state_message(game_state_t* game_state, char * message, FILE * e
 				new_player->score = score;
 				add_player(game_state,new_player);
 				//game_state->grid[game_state->players[i]->pos.row][game_state->players[i]->pos.col] = (char)(game_state->num_players-1+(int)('0'));
+				print_game_state(game_state, error_log);
 			}
 		}
 	}
@@ -130,7 +131,7 @@ void print_game_state(game_state_t * gs, FILE * fs){
 		fprintf(fs,"%s\n",gs->grid[i]);
 	fprintf(fs, "PLAYERS\n");
 	for(i=0; i<gs->num_players; i++){
-		fprintf(fs, "%s\t\t%d\n", gs->players[i]->username, gs->players[i]->player_id);
+		fprintf(fs, "%s\t\t%d\trow=%d\tcol=%d\n", gs->players[i]->username, gs->players[i]->player_id,gs->players[i]->pos.row,gs->players[i]->pos.col);
 	}
 	fprintf(fs,"===========\n");
 }

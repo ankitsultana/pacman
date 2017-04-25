@@ -153,6 +153,10 @@ int execute_message(char* message) {
 			if(player_status == UNREGISTERED){
 				player_status = EXITED;
 				free_me();
+				destroy_scoreboard_window(error_log);
+				destroy_game_window(error_log);
+				destroy_message_window(error_log);
+				render_welcome_screen(error_log);
 			} else {
 				unexpected_message_exception(possible_headers[ans],player_status);
 			}
@@ -162,6 +166,10 @@ int execute_message(char* message) {
 			if(player_status == UNREGISTERED) {
 				player_status = EXITED;
 				free_me();
+				destroy_scoreboard_window(error_log);
+				destroy_game_window(error_log);
+				destroy_message_window(error_log);
+				render_welcome_screen(error_log);
 			} else {
 				unexpected_message_exception(possible_headers[ans],player_status);
 			}
@@ -271,6 +279,11 @@ pos_t rightof(pos_t ref){
 }
 
 bool valid(pos_t pos){
+	int i;
+	for(i=0; i<((game_state_t*)(me->game))->num_players; i++)
+		if(((game_state_t*)(me->game))->players[i]->pos.row == pos.row && 
+			((game_state_t*)(me->game))->players[i]->pos.col == pos.col) 
+				return false;
 	if(((game_state_t*)(me->game))->grid[pos.row][pos.col] != 'X') return true;
 	else return false;
 	return true;
@@ -344,6 +357,7 @@ void update(){
 		for(i=0; i<((game_state_t*)(me->game))->num_players; i++)
 			update_player_pos(i);
 		// TODO: Update score
+		print_game_state(me->game, error_log);
 
 		// Render screen
 		render_game_screen(me->game, error_log);
