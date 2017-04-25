@@ -7,3 +7,5 @@ client: *.c *.h
 	$(CC) $(CC_FLAGS) $(sources) client.c render.c $(LINKER_FLAGS) -o client
 server: *.c *.h
 	$(CC) $(CC_FLAGS) $(sources) new_server.c $(LINKER_FLAGS) -o server
+all: *.c *.h
+	$(MAKE) server client
