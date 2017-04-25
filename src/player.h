@@ -31,6 +31,7 @@ typedef struct player_t {
 	dir_t c_dir;
 	player_status_t status;
 	int score;
+	int flag;
 	void * game;
 	char username[30];
 	int sockfd;

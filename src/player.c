@@ -5,6 +5,7 @@
 player_t* get_new_player(int player_id, char * username){
 	player_t * new_player = (player_t*)malloc(sizeof(player_t));
 	new_player->player_id = player_id;
+	new_player->flag = 0;
 	new_player->pos.row = -1;
 	new_player->pos.col = -1;
 	new_player->c_dir = NODIR;
