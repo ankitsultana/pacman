@@ -72,7 +72,7 @@ void * listener_thread_func(void * arg) {
     if(ok) {
       player->player_id = add_player_to_list(&plist, player);
       fprintf(player->ofp, "accept\n%d\n\n", player->player_id);
-      player->status = UNALLOCATED;
+	  player->status = UNALLOCATED;
       plist.unallocated++;
       if(plist.unallocated % PLAYERS_PER_GAME == 0) {
         int i;

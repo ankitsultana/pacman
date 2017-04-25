@@ -63,7 +63,23 @@ void* sender_thread_func(void* arg) {
 	//int message_len = 0;
 	//memset(send_buffer,0,sizeof(send_buffer));
 	while(true) {
-		char ch = getch();
+		int ch = getch();
+		switch(ch){
+			case KEY_UP:
+				ch = 'w';
+				break;
+			case KEY_DOWN:
+				ch = 's';
+				break;
+			case KEY_LEFT:
+				ch = 'a';
+				break;
+			case KEY_RIGHT:
+				ch = 'd';
+				break;
+			default:
+				break;
+		}
 		send_char(ch);
 		/*
 		if(ch != '\n') {
