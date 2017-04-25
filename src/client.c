@@ -60,7 +60,7 @@ void send_char(char ch) {
 
 void* sender_thread_func(void* arg) {
 	send_username(username);
-	int message_len = 0;
+	//int message_len = 0;
 	//memset(send_buffer,0,sizeof(send_buffer));
 	while(true) {
 		char ch = getch();
@@ -91,7 +91,7 @@ void display_message_center(const char * display_message){
 }
 
 void display_message_bottom_corner(const char * display_message){
-		int display_message_len = strlen(display_message);
+		//int display_message_len = strlen(display_message);
 		int max_y, max_x;
 		getmaxyx(stdscr,max_y,max_x);
 		mvprintw(max_y-1,0,display_message);
