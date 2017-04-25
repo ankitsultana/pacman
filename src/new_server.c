@@ -137,7 +137,7 @@ void* game_thread_func(void *arg) {
   int i, j;
   game_state_t* game = arg;
   for(i = 0; i < game->num_players; i++) {
-    game->grid[st_r[i]][st_r[j]] = 'P';
+    game->grid[st_r[i]][st_c[i]] = 'P';
   }
   player_t* player;
   printf("Number of Players: %d\n", game->num_players);
