@@ -89,6 +89,12 @@ void * listener_thread_func(void * arg) {
         int ctr = 0;
         for(i = 0; i < MAX_PLAYERS; i++) {
           if(plist.arr[i] != NULL && plist.arr[i]->status == UNALLOCATED) {
+            game->players[ctr++] = plist.arr[i];
+          }
+        }
+        ctr = 0;
+        for(i = 0; i < MAX_PLAYERS; i++) {
+          if(plist.arr[i] != NULL && plist.arr[i]->status == UNALLOCATED) {
             pthread_t player_thread_id;
             plist.arr[i]->status = PLAYING;
             plist.arr[i]->game = game;
@@ -127,6 +133,15 @@ void* player_thread_func(void* arg) {
   printf("SENT map to USER: %s\n", player->username);
   fflush(stdout);
   for(i = 0; i < game->num_players; i++) {
+    printf("%d %d %d %d %d %d %s\n",
+            game->players[i]->player_id,
+            game->players[i]->pos.row,
+            game->players[i]->pos.col,
+            game->players[i]->c_dir,
+            game->players[i]->i_dir,
+            game->players[i]->score,
+            game->players[i]->username);
+    fflush(stdout);
     fprintf(player->ofp, "%d %d %d %d %d %d %s\n",
             game->players[i]->player_id,
             game->players[i]->pos.row,
