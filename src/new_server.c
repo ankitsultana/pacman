@@ -48,26 +48,22 @@ void * listener_thread_func(void * arg) {
 		player->ifp = fdopen(sockfd, "r");
 		player->ofp = fdopen(sockfd, "w");
 		setvbuf(player->ofp, NULL, _IONBF, BUFSIZ);
+    if(plist.size == MAX_PLAYERS) {
+      fprintf(player->ofp, "reject\n\n");
+      free(player);
+    } else {
+      fscanf(player->ifp, "%s", player->username);
+    }
 		player_thread_func(player);
 	}
 	return NULL;
 }
 
 void* player_thread_func(void* arg) {
-	int i;
-	player_t* player = (player_t*)arg;
-
-	if(plist.size == MAX_PLAYERS) {
-		fprintf(player->ofp, "reject\n\n");
-		free(player);
-		return NULL;
-	}
-
 	// get the username
-
-	fscanf(player->ifp, "%s", player->username);
 	// TODO: change to fgets to improve security
 
+  int i;
 	for(i=0; i<MAX_PLAYERS; ++i) {
 		if(plist.arr[i] != NULL && strcmp(plist.arr[i]->username, player->username) == 0) {
 			fprintf(player->ofp, "taken\n\n");
@@ -85,6 +81,8 @@ void* player_thread_func(void* arg) {
 		// allocate a game
 	}
 
+  while(player->status == UNALLOCATED) {
+  }
 	char ch;
 	while(true) {
 		ch = fgetc(player->ifp);
