@@ -65,22 +65,13 @@ void* sender_thread_func(void* arg) {
 	while(true) {
 		int ch = getch();
 		switch(ch){
-			case KEY_UP:
-				ch = 'w';
-				break;
-			case KEY_DOWN:
-				ch = 's';
-				break;
-			case KEY_LEFT:
-				ch = 'a';
-				break;
-			case KEY_RIGHT:
-				ch = 'd';
-				break;
-			default:
-				break;
+			case 'w':
+			case 'a':
+			case 's':
+			case 'd':
+			case 'q':
+				send_char(ch);
 		}
-		send_char(ch);
 		/*
 		if(ch != '\n') {
 			send_buffer[message_len++] = ch;
