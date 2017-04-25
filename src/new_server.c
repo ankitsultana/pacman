@@ -45,7 +45,7 @@ int killed_players_cnt;
 int killed[100];
 
 void create_map_str(char **grid) {
-  int size = 0, i, j;
+  int i, j;
   sprintf(MAP, "%d %d\n", 16, 16);
   int iter = strlen(MAP);
   for(i = 0; i < 16; i++) {
@@ -297,9 +297,7 @@ void* game_thread_func(void *arg) {
 }
 
 void* player_thread_func(void* arg) {
-  int i;
   player_t* player = (player_t*)arg;
-  game_state_t* game = (game_state_t*)player->game;
 	char ch;
 	while(true) {
 		ch = fgetc(player->ifp);

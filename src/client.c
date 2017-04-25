@@ -99,7 +99,9 @@ void display_message_center(const char * display_message){
 
 void display_message_bottom_corner(const char * display_message){
 		//int display_message_len = strlen(display_message);
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 		int max_y, max_x;
+#pragma GCC diagnostic warning "-Wunused-but-set-variable"
 		getmaxyx(stdscr,max_y,max_x);
 		mvprintw(max_y-1,0,display_message);
 		refresh();

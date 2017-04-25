@@ -101,7 +101,9 @@ void render_scoreboard(game_state_t * game, FILE* error_log) {
 		return ;
 	}
 	int i;// curr_r = 0;
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 	int max_y, max_x;
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 	char title[] = "SCOREBOARD";
 	int title_len = strlen(title);
 	getmaxyx(_scoreboard_window, max_y, max_x);
