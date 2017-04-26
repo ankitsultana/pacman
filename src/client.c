@@ -393,7 +393,7 @@ int main(int argc, char* argv[]) {
 	
 	// open error logfile
 	char errfile[100];
-	sprintf(errfile, "../secret/%s.client.error.log", username);
+	sprintf(errfile, "%s.client.error.log", username);
 	error_log = fopen(errfile,"w");
 
 	// connect to server
